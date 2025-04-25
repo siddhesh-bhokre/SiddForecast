@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SiddForecast</title>
+    <link
+      rel="icon"
+      href="https://imgs.search.brave.com/fs6uyhM5xA6gctiAKJTHhWtpR2YRWceKfG_9aqjmfRs/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNDk4NjU3ZjZm/N2MzYmI3ZjViZjVk/MDcyNDdiNzNlNWM2/MWM3ZTc0MjY3MTY4/YjNkYWY3ZGQyNzlh/OGFlNmQzZi93d3cu/YWNjdXdlYXRoZXIu/Y29tLw"
+      type="image/x-icon"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-color: #74ebd5;
+        --container-bg: #ffffff;
+        --text-color: #1e1e1e;
+        --input-text: #222;
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --input-bg: #ffffff;
+        --suggestion-bg: #ffffff;
+        --suggestion-hover: #f0f0f0;
+        --error-color: #cc0000;
+        --card-bg: #f9f9f9;
+        --toggle-color: #111;
+      }
+
+      [data-theme="dark"] {
+        --bg-color: #1e2a47;
+        --container-bg: #2e3a59;
+        --text-color: #f0f0f0;
+        --input-text: #ffffff;
+        --primary-color: #3a45b1;
+        --primary-hover: #5865d3;
+        --input-bg: #3a4562;
+        --suggestion-bg: #3a4562;
+        --suggestion-hover: #4b5b8e;
+        --error-color: #ff6b6b;
+        --card-bg: #3f4a6a;
+        --toggle-color: #ffcd38;
+      }
+
+      [data-theme="cold"] {
+        --bg-color: #e0f7fa;
+        --primary-color: #00bcd4;
+        --container-bg: #ffffff;
+        --text-color: #1e1e1e;
+      }
+
+      [data-theme="warm"] {
+        --bg-color: #ffcc80;
+        --primary-color: #f57c00;
+        --container-bg: #ffffff;
+        --text-color: #1e1e1e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        transition: background 0.3s ease, color 0.3s ease;
+      }
+
+      .weather-container {
+        width: 100%;
+        max-width: 420px;
+        background: var(--container-bg);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transition: background 0.3s ease, color 0.3s ease;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      .input-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        background: var(--input-bg);
+        color: var(--input-text);
+      }
+
+      input::placeholder {
+        color: #888;
+      }
+      .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: var(--suggestion-bg);
+        border: 1px solid #ccc;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        z-index: 10;
+        list-style: none; /* Ensure no default list styles */
+        padding: 0;
+        margin: 0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%; /* Ensure full width */
+      }
+
+      .suggestions li {
+        padding: 12px 16px;
+        cursor: pointer;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid #eee; /* Add light border between items */
+        transition: background-color 0.2s ease;
+        border-radius: 8px; /* Rounded corners for better look */
+      }
+
+      .suggestions li:hover {
+        background-color: var(--suggestion-hover);
+        font-weight: 500;
+      }
+
+      .suggestions li.no-match {
+        color: #999;
+        font-style: italic;
+        cursor: default;
+      }
+
+      .suggestions li:last-child {
+        border-bottom: none; /* Remove the bottom border on the last item */
+      }
+
+      button {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        background-color: var(--primary-color);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .weather-info {
+        margin-top: 1.5rem;
+        font-size: 1.1rem;
+      }
+
+      .weather-card {
+        background-color: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: left;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .weather-card img {
+        width: 60px;
+      }
+
+      .weather-card .temp {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin: 0.5rem 0;
+      }
+
+      .error-message {
+        color: var(--error-color);
+        margin-top: 1rem;
+      }
+
+      .loading-message {
+        color: var(--text-color);
+      }
+
+      .mode-toggle {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        font-size: 1.6rem;
+        cursor: pointer;
+        z-index: 100;
+        color: var(--toggle-color);
+      }
+      @media (max-width: 768px) {
+        .weather-container {
+          padding: 1.5rem;
+          max-width: 90%;
+        }
+
+        input {
+          padding: 0.7rem;
+          font-size: 0.95rem;
+        }
+
+        button {
+          padding: 0.9rem;
+          font-size: 1rem;
+        }
+
+        h1 {
+          font-size: 1.8rem;
+        }
+
+        .weather-info {
+          font-size: 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .weather-container {
+          padding: 1rem;
+          max-width: 90%;
+        }
+
+        h1 {
+          font-size: 1.6rem;
+        }
+
+        input {
+          padding: 0.6rem;
+          font-size: 0.9rem;
+        }
+
+        button {
+          padding: 0.8rem;
+          font-size: 1rem;
+        }
+
+        .weather-info {
+          font-size: 0.95rem;
+        }
+      }
+
+      @media (max-width: 320px) {
+        .weather-container {
+          padding: 0.8rem;
+          max-width: 90%;
+        }
+
+        h1 {
+          font-size: 1.4rem;
+        }
+
+        input {
+          padding: 0.5rem;
+          font-size: 0.85rem;
+        }
+
+        button {
+          padding: 0.7rem;
+          font-size: 0.95rem;
+        }
+
+        .weather-info {
+          font-size: 0.9rem;
+        }
+
+        .suggestions li {
+          padding: 10px 12px;
+          font-size: 0.85rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="weather-container">
+      <h1>🌤️SiddForecast</h1>
+      <p style="font-size: 0.95rem; color: #888; margin-bottom: 1.2rem">
+        Your daily weather companion
+      </p>
+      <div class="input-container">
+        <input type="text" id="cityInput" placeholder="Enter city..." />
+        <ul id="suggestions" class="suggestions"></ul>
+      </div>
+      <button onclick="fetchWeather()">Check Weather</button>
+      <div id="weatherResult" class="weather-info"></div>
+    </div>
+
+    <!-- Theme toggle icon -->
+    <div class="mode-toggle" onclick="toggleMode()">🌙</div>
+
+    <script>
+      const apiKey = "60b1657421cf6ef48ca6426a31db503d";
+      const cities = [
+        "Mumbai, India",
+        "Pune, India",
+        "Nagpur, India",
+        "Delhi, India",
+        "Chhatrapati Sambhajinagar, India",
+        "Aurangabad, India", 
+        "Bengaluru, India",
+        "Hyderabad, India",
+        "New York, USA",
+        "Tokyo, Japan",
+        "London, UK",
+        "Paris, France",
+      ];
+
+      const input = document.getElementById("cityInput");
+      const suggestions = document.getElementById("suggestions");
+      const result = document.getElementById("weatherResult");
+      const button = document.querySelector("button");
+
+      input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+        suggestions.innerHTML = "";
+
+        if (query.length < 2) return;
+
+        const filtered = cities.filter((city) =>
+          city.toLowerCase().includes(query)
+        );
+        
+        if (filtered.length === 0) {
+          const related = cities.filter((city) =>
+            city.toLowerCase().includes(query.slice(0, 3))
+          );
+
+          if (related.length > 0) {
+            const label = document.createElement("li");
+            label.textContent = "🔍 Suggested:";
+            label.className = "no-match";
+            suggestions.appendChild(label);
+
+            related.forEach((city) => {
+              const li = document.createElement("li");
+              li.textContent = city;
+              li.onclick = () => selectCity(city);
+              suggestions.appendChild(li);
+            });
+          }
+        } else {
+          filtered.forEach((city) => {
+            const li = document.createElement("li");
+            li.textContent = city;
+            li.onclick = () => selectCity(city);
+            suggestions.appendChild(li);
+          });
+        }
+      });
+
+      function selectCity(city) {
+        input.value = city;
+        suggestions.innerHTML = "";
+      }
+
+     
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); 
+          fetchWeather(); 
+        }
+      });
+
+      async function fetchWeather() {
+        const city = input.value.trim();
+        result.innerHTML = "";
+        suggestions.innerHTML = "";
+
+        if (!city) {
+          result.innerHTML =
+            '<p class="error-message">Please enter a city name.</p>';
+          return;
+        }
+
+        result.innerHTML = '<p class="loading-message">Loading weather...</p>';
+
+        try {
+          const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+              city
+            )}&units=metric&appid=${apiKey}`
+          );
+          const data = await res.json();
+          if (data.cod !== 200) throw new Error(data.message);
+          displayWeather(data);
+        } catch (err) {
+          result.innerHTML = `<p class="error-message">${err.message}</p>`;
+        }
+      }
+
+      function displayWeather(data) {
+        const iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+        result.innerHTML = `
+      <div class="weather-card">
+        <h2>${data.name}, ${data.sys.country}</h2>
+        <img src="${iconUrl}" alt="Weather Icon">
+        <p><strong>${data.weather[0].main}</strong> - ${data.weather[0].description}</p>
+        <p class="temp">${data.main.temp} °C</p>
+        <p>Humidity: ${data.main.humidity}%</p>
+        <p>Wind Speed: ${data.wind.speed} m/s</p>
+      </div>
+    `;
+        changeThemeBasedOnTemperature(data.main.temp);
+      }
+
+      function changeThemeBasedOnTemperature(temp) {
+        let theme = "light"; 
+        if (temp < 10) {
+          theme = "cold"; 
+        } else if (temp > 30) {
+          theme = "warm"; 
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+        const modeToggle = document.querySelector(".mode-toggle");
+        if (theme === "cold") {
+          modeToggle.textContent = "🌞"; 
+        } else if (theme === "warm") {
+          modeToggle.textContent = "❄️"; 
+        } else {
+          modeToggle.textContent = "🌙";
+        }
+      }
+
+      function toggleMode() {
+        const html = document.documentElement;
+        const modeToggle = document.querySelector(".mode-toggle");
+        const currentTheme = html.getAttribute("data-theme");
+        const newTheme = currentTheme === "light" ? "dark" : "light";
+        html.setAttribute("data-theme", newTheme);
+        modeToggle.textContent = newTheme === "dark" ? "🌞" : "🌙";
+        localStorage.setItem("theme", newTheme);
+      }
+
+     
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        document.querySelector(".mode-toggle").textContent =
+          savedTheme === "dark" ? "🌞" : "🌙";
+      });
+    </script>
+  </body>
+</html>
